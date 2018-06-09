@@ -19,23 +19,26 @@ import java.util.Random;
 public class Game extends ApplicationAdapter {
 
     private SpriteBatch batch;
-    private Texture[] passaros;
+    private Texture[] dragao;
+
     private Texture fundo;
-    private Texture fogo1;
-    private Texture fogo2;
-    private Texture fogo3;
+
     private Texture fogo4;
+    private Texture fogo1;
+    private Texture fogo3;
+    private Texture fogo2;
 
     private Texture gameOver;
+
     private Random numeroRandomico;
+
     private BitmapFont fonte;
     private BitmapFont mensagem;
-    private Circle passaroCirculo;
-    private Rectangle retanguloCanoTopo;
-    private Rectangle retanguloCanoBaixo;
-
-    private Rectangle retanguloFogoBaixo;
-    private Rectangle retanguloFogoAlto;
+    private Circle dragaoCirculo;
+    private Rectangle retanguloFogo1;
+    private Rectangle retanguloFogo2;
+    private Rectangle retanguloFogo3;
+    private Rectangle retanguloFogo4;
     //private ShapeRenderer shape;
 
     //Atributos de configuracao
@@ -47,8 +50,8 @@ public class Game extends ApplicationAdapter {
     private float variacao = 0;
     private float velocidadeQueda=0;
     private float posicaoInicialVertical;
-    private float posicaoMovimentoCanoHorizontal;
-    private float espacoEntreCanos;
+    private float posicaoMovimentoFogoHorizontal;
+    private float espacoEntreFogo;
     private float deltaTime;
     private float alturaEntreCanosRandomica;
     private boolean marcouPonto=false;
@@ -64,30 +67,35 @@ public class Game extends ApplicationAdapter {
 
         batch = new SpriteBatch();
         numeroRandomico = new Random();
-        passaroCirculo = new Circle();
-        /*retanguloCanoTopo = new Rectangle();
-        retanguloCanoBaixo = new Rectangle();
-        shape = new ShapeRenderer();*/
+        dragaoCirculo = new Circle();
+        retanguloFogo1 = new Rectangle();
+        retanguloFogo3 = new Rectangle();
+        retanguloFogo4 = new Rectangle();
+        retanguloFogo2 = new Rectangle();
+        //shape = new ShapeRenderer();
         fonte = new BitmapFont();
-        fonte.setColor(Color.BLUE);
+        fonte.setColor(Color.WHITE);
         fonte.getData().setScale(6);
 
         mensagem = new BitmapFont();
-        mensagem.setColor(Color.BLUE);
-        mensagem.getData().setScale(5);
+        mensagem.setColor(Color.WHITE);
+        mensagem.getData().setScale(3);
 
 
-        passaros = new Texture[4];
-        passaros[0] = new Texture("dragao1.png");
-        passaros[1] = new Texture("dragao2.png");
-        passaros[2] = new Texture("dragao3.png");
-        passaros[3] = new Texture("dragao4.png");
+        dragao = new Texture[4];
+        dragao[0] = new Texture("dragao1.png");
+        dragao[1] = new Texture("dragao2.png");
+        dragao[2] = new Texture("dragao3.png");
+        dragao[3] = new Texture("dragao4.png");
 
-        fundo = new Texture("fundo1.png");
+
+        fundo = new Texture("fundo.png");
         fogo1 = new Texture("fire1.png");
         fogo2 = new Texture("fire2.png");
         fogo3 = new Texture("fire3.png");
         fogo4 = new Texture("fire4.png");
+
+
         gameOver = new Texture("game_over.png");
 
         /**********************************************
@@ -101,8 +109,8 @@ public class Game extends ApplicationAdapter {
         alturaDispositivo  = VIRTUAL_HEIGHT;
 
         posicaoInicialVertical = alturaDispositivo / 2;
-        posicaoMovimentoCanoHorizontal = larguraDispositivo;
-        espacoEntreCanos = 300;
+        posicaoMovimentoFogoHorizontal = larguraDispositivo;
+        espacoEntreFogo = 300;
 
     }
 
@@ -125,6 +133,16 @@ public class Game extends ApplicationAdapter {
             }
 
         }else {//Iniciado
+            int contador = 0;
+            if(pontuacao >= 3){
+                posicaoMovimentoFogoHorizontal -= deltaTime * 600;
+                contador ++;
+            }
+
+            if(contador == 2){
+                posicaoMovimentoFogoHorizontal -=deltaTime *800;
+            }
+
 
             velocidadeQueda++;
             if (posicaoInicialVertical > 0 || velocidadeQueda < 0)
@@ -132,21 +150,21 @@ public class Game extends ApplicationAdapter {
 
             if( estadoJogo == 1 ){//iniciado
 
-                posicaoMovimentoCanoHorizontal -= deltaTime * 500;
+                posicaoMovimentoFogoHorizontal -= deltaTime * 300;
 
                 if (Gdx.input.justTouched()) {
                     velocidadeQueda = -15;
                 }
 
-                //Verifica se o cano saiu inteiramente da tela
-                if (posicaoMovimentoCanoHorizontal < -fogo2.getWidth()) {
-                    posicaoMovimentoCanoHorizontal = larguraDispositivo;
-                    alturaEntreCanosRandomica = numeroRandomico.nextInt(400) - 200;
+                //Verifica se o fogo saiu inteiramente da tela
+                if (posicaoMovimentoFogoHorizontal < -fogo2.getWidth()) {
+                    posicaoMovimentoFogoHorizontal = larguraDispositivo;
+                    alturaEntreCanosRandomica = numeroRandomico.nextInt(500) - 200;
                     marcouPonto = false;
                 }
 
                 //Verifica pontuação
-                if(posicaoMovimentoCanoHorizontal < 120 ){
+                if(posicaoMovimentoFogoHorizontal < 120 ){
                     if( !marcouPonto ){
                         pontuacao++;
                         marcouPonto = true;
@@ -159,12 +177,11 @@ public class Game extends ApplicationAdapter {
                     estadoJogo = 0;
                     velocidadeQueda = 0;
                     pontuacao = 0;
-                    posicaoMovimentoCanoHorizontal = larguraDispositivo;
+                    posicaoMovimentoFogoHorizontal = larguraDispositivo;
                     posicaoInicialVertical = alturaDispositivo / 2;
                 }
 
             }
-
 
         }
 
@@ -174,61 +191,53 @@ public class Game extends ApplicationAdapter {
         batch.begin();
 
         batch.draw(fundo, 0, 0, larguraDispositivo, alturaDispositivo);
-        batch.draw(fogo2, posicaoMovimentoCanoHorizontal, alturaDispositivo / 2 + espacoEntreCanos / 2 + alturaEntreCanosRandomica);
-        batch.draw(fogo1, posicaoMovimentoCanoHorizontal, alturaDispositivo / 2 - fogo1.getHeight() - espacoEntreCanos / 2 + alturaEntreCanosRandomica);
+        batch.draw(fogo1, posicaoMovimentoFogoHorizontal, alturaDispositivo / 2 + espacoEntreFogo / 2 + alturaEntreCanosRandomica);
+        batch.draw(fogo2, posicaoMovimentoFogoHorizontal, alturaDispositivo / 3 + espacoEntreFogo / 2 + alturaEntreCanosRandomica);
+        batch.draw(fogo3, posicaoMovimentoFogoHorizontal, alturaDispositivo / 4 - fogo1.getHeight() - espacoEntreFogo / 2 + alturaEntreCanosRandomica);
+        batch.draw(fogo4, posicaoMovimentoFogoHorizontal, alturaDispositivo / 5 - fogo1.getHeight() - espacoEntreFogo / 2 + alturaEntreCanosRandomica);
 
-        batch.draw(fogo3, posicaoMovimentoCanoHorizontal, alturaDispositivo / 3 - fogo1.getHeight() - espacoEntreCanos / 2 + alturaEntreCanosRandomica);
-        batch.draw(fogo4, posicaoMovimentoCanoHorizontal, alturaDispositivo / 3 + espacoEntreCanos / 3 + alturaEntreCanosRandomica);
 
-
-        batch.draw(passaros[(int) variacao], 120, posicaoInicialVertical);
+        batch.draw(dragao[(int) variacao], 120, posicaoInicialVertical);
         fonte.draw(batch, String.valueOf(pontuacao), larguraDispositivo / 2, alturaDispositivo - 50);
 
         if( estadoJogo == 2 ) {
-            mensagem.draw(batch, "Toque para reiniciar!", larguraDispositivo / 2 - 300, alturaDispositivo / 2 - gameOver.getHeight());
+            mensagem.draw(batch, "Toque para reiniciar!", larguraDispositivo / 2 - 210, alturaDispositivo / 2 - 100);
+            mensagem.draw(batch, "Total de pontos: " + pontuacao, larguraDispositivo/2 - 210, alturaDispositivo/2);
             //batch.draw(gameOver, larguraDispositivo / 2 - gameOver.getWidth() / 2, alturaDispositivo / 2);
         }
 
         batch.end();
 
-        passaroCirculo.set(120 + passaros[0].getWidth() / 2, posicaoInicialVertical + passaros[0].getHeight() / 2, passaros[0].getWidth() / 2);
-        retanguloCanoBaixo = new Rectangle(
-                posicaoMovimentoCanoHorizontal, alturaDispositivo / 2 - fogo1.getHeight() - espacoEntreCanos / 2 + alturaEntreCanosRandomica,
+        dragaoCirculo.set(120 + dragao[0].getWidth() / 2, posicaoInicialVertical + dragao[0].getHeight() / 2, dragao[0].getWidth() / 2);
+
+        retanguloFogo1 = new Rectangle(
+                posicaoMovimentoFogoHorizontal, alturaDispositivo / 2 + espacoEntreFogo / 2 + alturaEntreCanosRandomica,
                 fogo1.getWidth(), fogo1.getHeight()
         );
 
-        retanguloCanoTopo = new Rectangle(
-                posicaoMovimentoCanoHorizontal, alturaDispositivo / 2 + espacoEntreCanos / 2 + alturaEntreCanosRandomica,
+        retanguloFogo2 = new Rectangle(
+                posicaoMovimentoFogoHorizontal, alturaDispositivo / 3 + espacoEntreFogo / 2 + alturaEntreCanosRandomica,
                 fogo2.getWidth(), fogo2.getHeight()
         );
 
-        retanguloFogoAlto = new Rectangle(
-                posicaoMovimentoCanoHorizontal, alturaDispositivo / 2 + espacoEntreCanos / 2 + alturaEntreCanosRandomica,
-                fogo2.getWidth(), fogo2.getHeight()
+        retanguloFogo3 = new Rectangle(
+                posicaoMovimentoFogoHorizontal, alturaDispositivo / 4 - fogo3.getHeight() - espacoEntreFogo / 2 + alturaEntreCanosRandomica,
+                fogo3.getWidth(), fogo3.getHeight()
         );
 
-        retanguloFogoBaixo = new Rectangle(
-                posicaoMovimentoCanoHorizontal, alturaDispositivo / 2 - fogo1.getHeight() - espacoEntreCanos / 2 + alturaEntreCanosRandomica,
-                fogo1.getWidth(), fogo1.getHeight()
+        retanguloFogo4 = new Rectangle(
+                posicaoMovimentoFogoHorizontal, alturaDispositivo / 5 - fogo4.getHeight() - espacoEntreFogo / 2 + alturaEntreCanosRandomica,
+                fogo4.getWidth(), fogo4.getHeight()
         );
-
-
-        //Desenhar formas
-        /*shape.begin( ShapeRenderer.ShapeType.Filled);
-        shape.circle(passaroCirculo.x, passaroCirculo.y, passaroCirculo.radius);
-        shape.rect(retanguloCanoBaixo.x, retanguloCanoBaixo.y, retanguloCanoBaixo.width, retanguloCanoBaixo.height);
-        shape.rect(retanguloCanoTopo.x, retanguloCanoTopo.y, retanguloCanoTopo.width, retanguloCanoTopo.height);
-        shape.setColor(Color.RED);
-        shape.end();*/
 
         //Teste de colisão
-        if( Intersector.overlaps( passaroCirculo, retanguloCanoBaixo ) || Intersector.overlaps(passaroCirculo, retanguloCanoTopo)
-                || posicaoInicialVertical <= 0 || posicaoInicialVertical >= alturaDispositivo || Intersector.overlaps(passaroCirculo, retanguloFogoAlto) || Intersector.overlaps(passaroCirculo, retanguloFogoBaixo) ){
+        if( Intersector.overlaps(dragaoCirculo, retanguloFogo3) || Intersector.overlaps(dragaoCirculo, retanguloFogo1)
+                || Intersector.overlaps(dragaoCirculo, retanguloFogo4) || Intersector.overlaps(dragaoCirculo, retanguloFogo2)|| posicaoInicialVertical <= 0 || posicaoInicialVertical >= alturaDispositivo ){
             //Gdx.app.log("Colisão", "Houve colisão");
             estadoJogo = 2;
         }
-    }
 
+    }
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height);
